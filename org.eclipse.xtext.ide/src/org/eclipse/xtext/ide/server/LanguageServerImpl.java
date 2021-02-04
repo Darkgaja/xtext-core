@@ -56,6 +56,8 @@ import org.eclipse.lsp4j.ExecuteCommandCapabilities;
 import org.eclipse.lsp4j.ExecuteCommandOptions;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.FileChangeType;
+import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.InitializeParams;
@@ -111,6 +113,7 @@ import org.eclipse.xtext.ide.server.commands.ExecutableCommandRegistry;
 import org.eclipse.xtext.ide.server.concurrent.RequestManager;
 import org.eclipse.xtext.ide.server.contentassist.ContentAssistService;
 import org.eclipse.xtext.ide.server.findReferences.WorkspaceResourceAccess;
+import org.eclipse.xtext.ide.server.folding.FoldingRangeService;
 import org.eclipse.xtext.ide.server.formatting.FormattingService;
 import org.eclipse.xtext.ide.server.hover.IHoverService;
 import org.eclipse.xtext.ide.server.occurrences.IDocumentHighlightService;
@@ -1018,6 +1021,25 @@ public class LanguageServerImpl implements LanguageServer, WorkspaceService, Tex
 		options.setParams(params);
 		options.setCancelIndicator(cancelIndicator);
 		return renameService.prepareRename(options);
+	}
+	
+	/**
+	 * @since 2.25
+	 */
+	public CompletableFuture<List<FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
+		return requestManager.runRead(cancelIndicator -> foldingRange(params, cancelIndicator));
+	}
+	
+	/**
+	 * @since 2.25
+	 */
+	protected List<FoldingRange> foldingRange(FoldingRangeRequestParams params, CancelIndicator cancelIndicator) {
+		URI uri = getURI(params.getTextDocument());
+		FoldingRangeService foldingRangeService = getService(uri, FoldingRangeService.class);
+		if (foldingRangeService == null) {
+			throw new UnsupportedOperationException();
+		}
+		return workspaceManager.doRead(uri, (document, resource) -> foldingRangeService.createFoldingRanges(document, resource, cancelIndicator));
 	}
 
 	@Override
