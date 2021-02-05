@@ -91,6 +91,7 @@ import org.junit.jupiter.api.BeforeEach
 
 import static extension org.eclipse.lsp4j.util.Ranges.containsRange
 import static extension org.eclipse.xtext.util.Strings.*
+import org.eclipse.lsp4j.FoldingRangeRequestParams
 
 /**
  * @author Sven Efftinge - Initial contribution and API
@@ -725,6 +726,20 @@ abstract class AbstractLanguageServerTest implements Endpoint {
 		])
 		val result = new Document(1, fileInfo.contents).applyChanges(<TextEdit>newArrayList(changes.get()).reverse)
 		assertEqualsStricter(configuration.expectedText, result.contents)
+	}
+	
+	protected def testFolding((FoldingConfiguration)=>void configurator) {
+		val extension configuration = new FoldingConfiguration
+		configuration.filePath = 'MyModel.' + fileExtension
+		configurator.apply(configuration)
+		
+		val fileInfo = initializeContext(configuration)
+		
+		val foldings = languageServer.foldingRange(new FoldingRangeRequestParams => [
+			textDocument = new TextDocumentIdentifier(fileInfo.uri)
+		]).get()
+		
+		assertEqualsStricter(configuration.expectedFoldings, String.join("", foldings.map[toString]));
 	}
 
 	override notify(String method, Object parameter) {

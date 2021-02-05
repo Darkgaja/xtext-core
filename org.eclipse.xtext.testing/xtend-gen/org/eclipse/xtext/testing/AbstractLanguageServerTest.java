@@ -53,6 +53,8 @@ import org.eclipse.lsp4j.DocumentSymbolCapabilities;
 import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.FileChangeType;
 import org.eclipse.lsp4j.FileEvent;
+import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.InitializeParams;
@@ -98,6 +100,20 @@ import org.eclipse.xtext.ide.server.UriExtensions;
 import org.eclipse.xtext.ide.server.concurrent.RequestManager;
 import org.eclipse.xtext.resource.IResourceServiceProvider;
 import org.eclipse.xtext.service.OperationCanceledManager;
+import org.eclipse.xtext.testing.DefinitionTestConfiguration;
+import org.eclipse.xtext.testing.DocumentHighlightConfiguration;
+import org.eclipse.xtext.testing.DocumentSymbolConfiguraiton;
+import org.eclipse.xtext.testing.FileInfo;
+import org.eclipse.xtext.testing.FoldingConfiguration;
+import org.eclipse.xtext.testing.FormattingConfiguration;
+import org.eclipse.xtext.testing.HoverTestConfiguration;
+import org.eclipse.xtext.testing.RangeFormattingConfiguration;
+import org.eclipse.xtext.testing.ReferenceTestConfiguration;
+import org.eclipse.xtext.testing.SignatureHelpConfiguration;
+import org.eclipse.xtext.testing.TestCompletionConfiguration;
+import org.eclipse.xtext.testing.TextDocumentConfiguration;
+import org.eclipse.xtext.testing.TextDocumentPositionConfiguration;
+import org.eclipse.xtext.testing.WorkspaceSymbolConfiguration;
 import org.eclipse.xtext.util.CancelIndicator;
 import org.eclipse.xtext.util.Files;
 import org.eclipse.xtext.util.Modules2;
@@ -1431,6 +1447,30 @@ public abstract class AbstractLanguageServerTest implements Endpoint {
       String _contents = fileInfo.getContents();
       final Document result = new Document(Integer.valueOf(1), _contents).applyChanges(ListExtensions.<TextEdit>reverse(CollectionLiterals.<TextEdit>newArrayList(((TextEdit[])Conversions.unwrapArray(changes.get(), TextEdit.class)))));
       this.assertEqualsStricter(configuration.getExpectedText(), result.getContents());
+    } catch (Throwable _e) {
+      throw Exceptions.sneakyThrow(_e);
+    }
+  }
+  
+  protected void testFolding(final Procedure1<? super FoldingConfiguration> configurator) {
+    try {
+      @Extension
+      final FoldingConfiguration configuration = new FoldingConfiguration();
+      configuration.setFilePath(("MyModel." + this.fileExtension));
+      configurator.apply(configuration);
+      final FileInfo fileInfo = this.initializeContext(configuration);
+      FoldingRangeRequestParams _foldingRangeRequestParams = new FoldingRangeRequestParams();
+      final Procedure1<FoldingRangeRequestParams> _function = (FoldingRangeRequestParams it) -> {
+        String _uri = fileInfo.getUri();
+        TextDocumentIdentifier _textDocumentIdentifier = new TextDocumentIdentifier(_uri);
+        it.setTextDocument(_textDocumentIdentifier);
+      };
+      FoldingRangeRequestParams _doubleArrow = ObjectExtensions.<FoldingRangeRequestParams>operator_doubleArrow(_foldingRangeRequestParams, _function);
+      final List<FoldingRange> foldings = this.languageServer.foldingRange(_doubleArrow).get();
+      final Function1<FoldingRange, String> _function_1 = (FoldingRange it) -> {
+        return it.toString();
+      };
+      this.assertEqualsStricter(configuration.getExpectedFoldings(), String.join("", ListExtensions.<FoldingRange, String>map(foldings, _function_1)));
     } catch (Throwable _e) {
       throw Exceptions.sneakyThrow(_e);
     }
