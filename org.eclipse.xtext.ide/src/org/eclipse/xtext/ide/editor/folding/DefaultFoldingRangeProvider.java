@@ -10,8 +10,6 @@
 package org.eclipse.xtext.ide.editor.folding;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.emf.common.util.TreeIterator;
@@ -34,6 +32,7 @@ import com.google.inject.name.Named;
 /**
  * @author Michael Clay - Initial contribution and API
  * @author Sebastian Zarnekow - Introduced FoldedRegion, use ILocationInFileProvider
+ * @author Mark Sujew - Ported to IDE project
  */
 public class DefaultFoldingRangeProvider implements IFoldingRangeProvider {
 
@@ -48,18 +47,18 @@ public class DefaultFoldingRangeProvider implements IFoldingRangeProvider {
 	public Collection<FoldingRange> getFoldingRanges(final XtextResource xtextDocument,
 			CancelIndicator cancelIndicator) {
 		Collection<FoldingRange> result = Sets.newLinkedHashSet();
-		IFoldingRangeAcceptor foldingRegionAcceptor = createAcceptor(xtextDocument, result);
+		IFoldingRangeAcceptor<?> foldingRegionAcceptor = createAcceptor(xtextDocument, result);
 		computeObjectFolding(xtextDocument, foldingRegionAcceptor, cancelIndicator);
 		computeCommentFolding(xtextDocument, foldingRegionAcceptor);
 		return result;
 	}
 
-	protected IFoldingRangeAcceptor createAcceptor(XtextResource xtextDocument,
+	protected IFoldingRangeAcceptor<?> createAcceptor(XtextResource xtextDocument,
 			Collection<FoldingRange> foldedPositions) {
 		return new DefaultFoldingRangeAcceptor(foldedPositions);
 	}
 
-	protected void computeObjectFolding(XtextResource xtextResource, IFoldingRangeAcceptor foldingRegionAcceptor,
+	protected void computeObjectFolding(XtextResource xtextResource, IFoldingRangeAcceptor<?> foldingRegionAcceptor,
 			CancelIndicator cancelIndicator) {
 		IParseResult parseResult = xtextResource.getParseResult();
 		if (parseResult != null) {
@@ -95,37 +94,31 @@ public class DefaultFoldingRangeProvider implements IFoldingRangeProvider {
 	/**
 	 * @since 2.8
 	 */
-	protected void computeObjectFolding(EObject eObject, IFoldingRangeAcceptor foldingRegionAcceptor) {
+	protected void computeObjectFolding(EObject eObject, IFoldingRangeAcceptor<?> foldingRegionAcceptor) {
 		ITextRegion region = locationInFileProvider.getFullTextRegion(eObject);
 		if (region != null) {
-			foldingRegionAcceptor.accept(new FoldingRange(region.getOffset(), region.getLength()));
+			foldingRegionAcceptor.accept(region.getOffset(), region.getLength());
 		}
 	}
 
-	protected void computeCommentFolding(XtextResource xtextDocument, IFoldingRangeAcceptor foldingRegionAcceptor) {
+	protected void computeCommentFolding(XtextResource xtextDocument, IFoldingRangeAcceptor<?> foldingRegionAcceptor) {
 		IParseResult parseResult = xtextDocument.getParseResult();
 		if (parseResult != null) {
 			EObject rootASTElement = parseResult.getRootASTElement();
-			List<INode> nodes = getCommentNodes(rootASTElement);
-			for (INode node : nodes) {
-				foldingRegionAcceptor
-						.accept(new FoldingRange(node.getOffset(), node.getLength(), FoldingRangeKind.COMMENT));
-			}
+			acceptCommentNodes(rootASTElement, foldingRegionAcceptor);
 		}
 	}
 
-	protected List<INode> getCommentNodes(EObject eObject) {
+	protected void acceptCommentNodes(EObject eObject, IFoldingRangeAcceptor<?> foldingRegionAcceptor) {
 		ICompositeNode node = NodeModelUtils.getNode(eObject);
-		List<INode> result = Collections.emptyList();
 		if (node != null) {
 			for (INode leafNode : node.getAsTreeIterable()) {
 				if (leafNode.getGrammarElement() instanceof TerminalRule
 						&& ruleName.equalsIgnoreCase(((TerminalRule) leafNode.getGrammarElement()).getName())) {
-					result.add(leafNode);
+					foldingRegionAcceptor.accept(leafNode.getOffset(), leafNode.getLength(), FoldingRangeKind.COMMENT);
 				}
 			}
 		}
-		return result;
 	}
 
 	/**

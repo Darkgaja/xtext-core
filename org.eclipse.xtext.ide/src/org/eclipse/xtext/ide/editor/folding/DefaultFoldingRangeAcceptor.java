@@ -15,22 +15,44 @@ import java.util.Collection;
  * @author Michael Clay - Initial contribution and API
  * @author Sebastian Zarnekow - Introduced FoldedPosition
  */
-public class DefaultFoldingRangeAcceptor implements IFoldingRangeAcceptor {
+public class DefaultFoldingRangeAcceptor implements IFoldingRangeAcceptor<Void> {
 	private Collection<FoldingRange> result;
 
 	public DefaultFoldingRangeAcceptor(Collection<FoldingRange> result) {
 		this.result = result;
 	}
 
-	/**
-	 * @since 2.8
-	 */
-	@Override
-	public void accept(FoldingRange foldingRange) {
-		result.add(foldingRange);
-	}
-	
 	public Collection<FoldingRange> getFoldingRanges() {
 		return result;
+	}
+
+	@Override
+	public void accept(int offset, int length) {
+		accept(offset, length, false);
+	}
+
+	@Override
+	public void accept(int offset, int length, String kind) {
+		accept(offset, length, kind, null);
+	}
+
+	@Override
+	public void accept(int offset, int length, boolean initiallyFolded) {
+		accept(offset, length, null, initiallyFolded, null);
+	}
+
+	@Override
+	public void accept(int offset, int length, Void addedParams) {
+		accept(offset, length, null, false, addedParams);
+	}
+
+	@Override
+	public void accept(int offset, int length, String kind, Void addedParams) {
+		accept(offset, length, kind, false, addedParams);
+	}
+
+	@Override
+	public void accept(int offset, int length, String kind, boolean initiallyFolded, Void addedParams) {
+		result.add(new FoldingRange(offset, length, kind));
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2021 itemis AG (http://www.itemis.eu) and others.
+ * Copyright (c) 2021 TypeFox GmbH (http://www.typefox.io) and others.
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License 2.0 which is available at
  * http://www.eclipse.org/legal/epl-2.0.
@@ -32,8 +32,9 @@ public class FoldingRangeService {
 
 	public List<FoldingRange> createFoldingRanges(Document document, XtextResource resource,
 			CancelIndicator cancelIndicator) {
-		return foldingRangeProvider.getFoldingRanges(resource, cancelIndicator).stream().map(range -> toFoldingRange(document, range))
-				.filter(range -> range.getStartLine() > range.getEndLine()).collect(Collectors.toList());
+		return foldingRangeProvider.getFoldingRanges(resource, cancelIndicator).stream()
+				.map(range -> toFoldingRange(document, range))
+				.filter(range -> range.getStartLine() < range.getEndLine()).collect(Collectors.toList());
 	}
 
 	protected FoldingRange toFoldingRange(Document document, org.eclipse.xtext.ide.editor.folding.FoldingRange range) {

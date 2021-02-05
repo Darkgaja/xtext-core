@@ -12,8 +12,14 @@ package org.eclipse.xtext.ide.editor.folding;
 /**
  * @author Michael Clay - Initial contribution and API
  * @author Sebastian Zarnekow - Distinguish between total and identifying region
+ * @author Mark Sujew - Ported to IDE project
  */
-public interface IFoldingRangeAcceptor {
-	
-	void accept(FoldingRange foldingRange);
+public interface IFoldingRangeAcceptor<T> {
+
+	void accept(int offset, int length);
+	void accept(int offset, int length, String kind);
+	void accept(int offset, int length, boolean initiallyFolded);
+	void accept(int offset, int length, T addedParams);
+	void accept(int offset, int length, String kind, T addedParams);
+	void accept(int offset, int length, String kind, boolean initiallyFolded, T addedParams);
 }

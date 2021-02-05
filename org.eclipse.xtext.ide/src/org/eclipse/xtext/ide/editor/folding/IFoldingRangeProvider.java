@@ -17,12 +17,12 @@ import org.eclipse.xtext.util.CancelIndicator;
 import com.google.inject.ImplementedBy;
 
 /**
- * Compute the folding regions in the given document. This is a blocking
- * action when opening the editor in e4, so clients should be careful to
- * not resolve too many cross references in their implementation.
+ * Compute the folding regions in the given document. This is a blocking action when opening the editor in e4, so
+ * clients should be careful to not resolve too many cross references in their implementation.
  * 
  * @author Michael Clay - Initial contribution and API
  * @author Sebastian Zarnekow - Refactoring, introduced FoldedPosition
+ * @author Mark Sujew - Ported to IDE project
  */
 @ImplementedBy(DefaultFoldingRangeProvider.class)
 public interface IFoldingRangeProvider {
@@ -31,5 +31,4 @@ public interface IFoldingRangeProvider {
 	 * @return the list of <code>FoldedPosition</code> for the given document
 	 */
 	Collection<FoldingRange> getFoldingRanges(XtextResource xtextDocument, CancelIndicator cancelIndicator);
-
 }
