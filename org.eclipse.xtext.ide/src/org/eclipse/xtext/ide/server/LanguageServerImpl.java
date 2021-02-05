@@ -266,6 +266,7 @@ public class LanguageServerImpl implements LanguageServer, WorkspaceService, Tex
 		serverCapabilities.setDocumentFormattingProvider(true);
 		serverCapabilities.setDocumentRangeFormattingProvider(true);
 		serverCapabilities.setDocumentHighlightProvider(true);
+		serverCapabilities.setFoldingRangeProvider(true);
 		ClientCapabilities clientCapabilities = null;
 		if (params != null) {
 			clientCapabilities = params.getCapabilities();
